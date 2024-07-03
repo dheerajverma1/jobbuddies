@@ -29,7 +29,7 @@ class OtpController extends Controller
             'email_address' => $request->email,
             'otp'           => $otp,
         ]);
-        // Mail::to($request->email)->send(new \App\Mail\SendOtpMail($otp));
+        Mail::to($request->email)->send(new \App\Mail\SendOtpMail($otp));
         return response()->json(['success' => true, 'message' => 'OTP sent successfully']);
     }
 

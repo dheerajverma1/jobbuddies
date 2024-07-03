@@ -48,6 +48,12 @@ Route::post('/send-otp', [OtpController::class, 'sendOtp'])->name('sendOtp');
 Route::post('/verify-otp',[OtpController::class, 'verifyOtp'])->name('verifyOtp');
 
 Route::post('check-out',[CheckoutController::class, 'checkout'])->name('check-out');
+Route::get('payment-transaction',[CheckoutController::class, 'paymentTransaction'])->name('payment-transaction');
+Route::get('success-transaction',[CheckoutController::class, 'successTransaction'])->name('success-transaction');
+Route::get('failed-transaction',[CheckoutController::class, 'failedTransaction'])->name('failed-transaction');
+
+
+
 
 
 /* Route for reset password */

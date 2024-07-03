@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Mail\TransactionMail;
 use Illuminate\Http\Request;
 use App\Models\Cart;
 use Stripe\Stripe;
@@ -17,6 +18,7 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
 
@@ -34,7 +36,7 @@ class CheckoutController extends Controller
 
     public function checkout(Request $request)
     {
-        $user = User::where('email','=',$request->email)->first();  
+        $user = User::where('email', $request->email)->first();
         $customerId = $this->createStripeCustomer($user);
         $totalAmount  = $request->price;
         //-------   stripe payment gateway ------------//
@@ -43,10 +45,11 @@ class CheckoutController extends Controller
             $paymentIntent = PaymentIntent::create([
                 'amount' => $totalAmount * 100,  // Amount in cents
                 'currency' => 'usd',
+                'receipt_email' => $user->email,
                 'customer' => $customerId,
                 'description' => 'Test payment from your application',
                 'shipping' => [
-                    'name' => $user->name,
+                    'name' => $user->email,
                     'address' => [
                         'line1' => "testing address",
                         'line2' => "testing address",
@@ -85,110 +88,39 @@ class CheckoutController extends Controller
         }
         return $customerId;
     }
-    public function handleWebhook(Request $request)
-    {
-     
-        $endpoint_secret = 'whsec_y20f9hF5fvizU2ZNQy9SkssDNa4R7fQo';
 
-        $payload = @file_get_contents('php://input');
-        $sig_header = $_SERVER['HTTP_STRIPE_SIGNATURE'];
-        $event = null;
+    public function paymentTransaction(Request $request)
+    {
+        $intent = $request->get('payment_intent');
 
         try {
-            $event = \Stripe\Webhook::constructEvent(
-                $payload,
-                $sig_header,
-                $endpoint_secret
-            );
-        } catch (\UnexpectedValueException $e) {
-            // Invalid payload
-            http_response_code(400);
-            exit();
-        } catch (\Stripe\Exception\SignatureVerificationException $e) {
-            // Invalid signature
-            http_response_code(400);
-            exit();
+            // Set your Stripe secret key
+            Stripe::setApiKey(config('services.stripe.secret'));
+            // Retrieve the payment intent
+            $paymentIntent = PaymentIntent::retrieve($intent);
+            $email = $paymentIntent->receipt_email;
+            $user = User::where('email', $email)->first();
+            $transaction = "test";
+            Mail::to($user->email)->send(new TransactionMail($user, $transaction));
+
+            // Check the payment status
+            if ($paymentIntent->status === 'succeeded') {
+                return redirect()->route('success-transaction');
+            } else {
+                return redirect()->route('failed-transaction');
+            }
+        } catch (\Exception $e) {
+            return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
         }
-
-        // Handle the event
-        switch ($event->type) {
-            case 'payment_intent.amount_capturable_updated':
-                $paymentIntent = $event->data->object;
-                $paymentStatus = $paymentIntent->status;
-                $paymentid = $paymentIntent->id;
-                Transaction::where('payment_intent_id', $paymentid)->update(['status' => $paymentStatus]);
-                break;
-            case 'payment_intent.canceled':
-                $paymentIntent = $event->data->object;
-                $paymentStatus = $paymentIntent->status;
-                $paymentid = $paymentIntent->id;
-                Transaction::where('payment_intent_id', $paymentid)->update(['status' => $paymentStatus]);
-                break;
-            case 'payment_intent.partially_funded':
-                $paymentIntent = $event->data->object;
-                $paymentStatus = $paymentIntent->status;
-                $paymentid = $paymentIntent->id;
-                Transaction::where('payment_intent_id', $paymentid)->update(['status' => $paymentStatus]);
-                break;
-            case 'payment_intent.payment_failed':
-                $paymentIntent = $event->data->object;
-                $paymentStatus = $paymentIntent->status;
-                $paymentid = $paymentIntent->id;
-                Transaction::where('payment_intent_id', $paymentid)->update(['status' => $paymentStatus]);
-                $transaction = Transaction::where('payment_intent_id', $paymentid)->first();
-                $order_id = $transaction->order_id;
-                Order::where('id', $order_id)->update(['status' => 'cancelled']);
-                break;
-            case 'payment_intent.processing':
-                $paymentIntent = $event->data->object;
-                $paymentStatus = $paymentIntent->status;
-                $paymentid = $paymentIntent->id;
-                Transaction::where('payment_intent_id', $paymentid)->update(['status' => $paymentStatus]);
-                break;
-            case 'payment_intent.requires_action':
-                $paymentIntent = $event->data->object;
-                $paymentStatus = $paymentIntent->status;
-                $paymentid = $paymentIntent->id;
-                Transaction::where('payment_intent_id', $paymentid)->update(['status' => $paymentStatus]);
-                break;
-            case 'payment_intent.succeeded':
-                $paymentIntent = $event->data->object;
-                $paymentStatus = $paymentIntent->status;
-                $paymentid = $paymentIntent->id;
-                Transaction::where('payment_intent_id', $paymentid)->update(['status' => $paymentStatus]);
-                Log::info($paymentid);
-                $transaction = Transaction::where('payment_intent_id', $paymentid)->first();
-                $order_id = $transaction->order_id;
-                Log::info($transaction);
-                $order = Order::with('orderItems')->where('id', $order_id)->first();
-
-                $cartIds = $order->orderItems->pluck('cart_id')->toArray();
-                Cart::whereIn('id', $cartIds)->delete();
-
-                // $invoice_id = generateUniqueID(new OrderInvoice);
-                //  $invoice = OrderInvoice::create([
-                //     'order_id'        => $order_id,
-                //     'invoice_number'  => $invoice_id,
-                //     'total_amount'    => $transaction->total_amount,
-                //     'transaction_id'  =>  $paymentid,
-                //     'payment_obj'     =>  json_encode($paymentIntent),
-                //     'status'          => 'success'
-                // ]);
-
-                // $trackingNumber = Str::upper(Str::random(7));
-                // OrderTracking::create(['order_id' =>$order_id,'order_tracking_number' => $trackingNumber ]);
-
-                // foreach ($cartItems as $cartItem) {
-                //     $cartItem->delete();
-                // }
-                break;
-
-                // ... handle other event types
-            default:
-                echo 'Received unknown event type ' . $event->type;
-        }
-
-        http_response_code(200);
     }
 
+    public function successTransaction(){
+        return view('superadmin.transaction.success');
+    }
+
+
+    
+    public function failedTransaction(){
+        return view('superadmin.transaction.failed');
+    }
 }

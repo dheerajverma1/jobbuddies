@@ -20,17 +20,17 @@
         }
 
         /* .dropdown-content button {
-                                                   display: block;
-                                                   background-color: #212529;
-                                                   color: white;
-                                                   padding: 10px;
-                                                   text-align: center;
-                                                   border: none;
-                                                   cursor: pointer;
-                                                   } */
+                                                       display: block;
+                                                       background-color: #212529;
+                                                       color: white;
+                                                       padding: 10px;
+                                                       text-align: center;
+                                                       border: none;
+                                                       cursor: pointer;
+                                                       } */
         /* .dropdown-content button:hover {
-                                                   background-color: #3e8e41;
-                                                   } */
+                                                       background-color: #3e8e41;
+                                                       } */
         .dropdown:hover .dropdown-content {
             display: block;
         }
@@ -746,9 +746,9 @@
                 success: function(res) {
                     if (res.success == true) {
                         $('#otpModal').modal({
-                                backdrop: 'static', 
-                                keyboard: false 
-                            }).modal('show');
+                            backdrop: 'static',
+                            keyboard: false
+                        }).modal('show');
                         if (resend) {
                             $('.success-message').text('OTP Resent Successfully').show();
                             setTimeout(function() {
@@ -759,7 +759,7 @@
                 },
             });
         }
-        
+
         $('.input_otp input').on('input', function() {
             this.value = this.value.slice(0, 1);
             var nextInput = $(this).next('input');
@@ -1047,7 +1047,11 @@
         };
 
         function NXCardPayment(paymentIndent) {
-           var paymentModal = $('#payment-modal').modal({backdrop: 'static',keyboard: false }).modal('show');
+            var base_url = "{{ url('') }}";
+            var paymentModal = $('#payment-modal').modal({
+                backdrop: 'static',
+                keyboard: false
+            }).modal('show');
             var stripe = Stripe('{{ config('services.stripe.key') }}');
 
             let elements;
@@ -1060,6 +1064,7 @@
 
             // Fetches a payment intent and captures the client secret
             async function stripeInitialize() {
+
                 const appearance = {
                     theme: 'stripe',
                 };
@@ -1079,11 +1084,18 @@
                 const {
                     error
                 } = await stripe.confirmPayment({
-                    elements,
-                    // confirmParams: {
-                    //     return_url: NX.base_url + "/my-orders/success",
-                    // },
-                });
+                        elements,
+                        confirmParams: {
+                            return_url: base_url + '/payment-transaction',
+                        },
+                    })
+                    .then(function(result) {
+                        console.log(result);
+                        if (result.error) {
+                            console.log(result);
+                            // Inform the customer that there was an error.
+                        }
+                    });
 
                 if (error.type === "card_error" || error.type === "validation_error") {
                     StipeShowMessage(error.message);
@@ -1093,7 +1105,6 @@
                 }
                 StripeSetLoading(false);
             }
-
             async function StripeCheckStatus() {
                 const clientSecret = new URLSearchParams(window.location.search).get(
                     "payment_intent_client_secret"
