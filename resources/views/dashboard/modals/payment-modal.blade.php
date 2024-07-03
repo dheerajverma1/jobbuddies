@@ -4,10 +4,7 @@
             <div class="modal-content main-bg-color">
                 <div class="modal-header main-bg-color" id="commonModalHeader">
                     <h4 class="modal-title" id="commonModalTitle">Payment</h4>
-                    <button type="button" class="close close-button" data-dismiss="modal" aria-hidden="true"
-                        id="commonModalCloseIcon">
-                        <i class="ti-close"></i>
-                    </button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="d-flex justify-content-center align-items-center">
                     <div class="login-inner-div">

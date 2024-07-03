@@ -1047,7 +1047,7 @@
         };
 
         function NXCardPayment(paymentIndent) {
-            var paymentModal = $('#payment-modal').modal('show');
+           var paymentModal = $('#payment-modal').modal({backdrop: 'static',keyboard: false }).modal('show');
             var stripe = Stripe('{{ config('services.stripe.key') }}');
 
             let elements;
