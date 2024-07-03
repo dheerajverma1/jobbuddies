@@ -20,17 +20,17 @@
         }
 
         /* .dropdown-content button {
-                                   display: block;
-                                   background-color: #212529;
-                                   color: white;
-                                   padding: 10px;
-                                   text-align: center;
-                                   border: none;
-                                   cursor: pointer;
-                                   } */
+                                                   display: block;
+                                                   background-color: #212529;
+                                                   color: white;
+                                                   padding: 10px;
+                                                   text-align: center;
+                                                   border: none;
+                                                   cursor: pointer;
+                                                   } */
         /* .dropdown-content button:hover {
-                                   background-color: #3e8e41;
-                                   } */
+                                                   background-color: #3e8e41;
+                                                   } */
         .dropdown:hover .dropdown-content {
             display: block;
         }
@@ -69,6 +69,17 @@
         /* Change color of dropdown links on hover */
         .dropdown-content a:hover {
             background-color: #f1f1f1;
+
+        }
+
+        input[type=number]::-webkit-outer-spin-button,
+        input[type=number]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        input[type=number] {
+            -moz-appearance: textfield;
         }
     </style>
 @endpush
@@ -466,19 +477,19 @@
                                     <div class="table_time" id="{{ $weekDate['day'] . $weekDate['date'] }}">
                                     </div>
                             @endforeach
-                            {{-- 
-                  <div class="mb-3">
-                     <label for="timezone" class="form-label">Timezone</label>
-                     <select class="form-control" id="timezone">
-                        <option>(UTC-08:00) Pacific Time (US & Canada)</option>
-                        <option>(UTC-08:00) Pacific Time (US & Canada)</option>
-                        <option>(UTC-08:00) Pacific Time (US & Canada)</option>
-                        <option>(UTC-08:00) Pacific Time (US & Canada)</option>
-                        <option>(UTC-08:00) Pacific Time (US & Canada)</option>
-                        <option>(UTC-08:00) Pacific Time (US & Canada)</option>
-                     </select>
-                  </div>
-                  --}}
+
+                            <div class="mb-3">
+                                <label for="timezone" class="form-label">Timezone</label>
+                                <select class="form-control" id="timezone">
+                                    <option>(UTC-08:00) Pacific Time (US & Canada)</option>
+                                    <option>(UTC-08:00) Pacific Time (US & Canada)</option>
+                                    <option>(UTC-08:00) Pacific Time (US & Canada)</option>
+                                    <option>(UTC-08:00) Pacific Time (US & Canada)</option>
+                                    <option>(UTC-08:00) Pacific Time (US & Canada)</option>
+                                    <option>(UTC-08:00) Pacific Time (US & Canada)</option>
+                                </select>
+                            </div>
+
                         </div>
                         {{-- <input type="submit" name="submit" class="submit next btn btn-dark d-block w-100 action-button"
                   value="Schedule" /> --}}
@@ -548,6 +559,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="error-message mt-3 text-danger" style="display: none;"></div>
+                <div class="success-message mt-3 text-success" style="display: none;"></div>
                 <div class="modal-body">
                     <form class="otp-submit">
                         <input type="hidden" name="email" id="otp_email">
@@ -682,7 +694,7 @@
 
         // Resend OTP
         $('#resend_otp').click(function() {
-            sendOtp();
+            sendOtp(true);
         });
         $('#verify_otp').click(function(e) {
             e.preventDefault();
@@ -717,7 +729,7 @@
             });
         });
 
-        function sendOtp() {
+        function sendOtp(resend = false) {
             var formData = {
                 _token: "{{ csrf_token() }}",
                 name: $('#name').val(),
@@ -733,12 +745,36 @@
                 data: formData,
                 success: function(res) {
                     if (res.success == true) {
-                        $('#otpModal').modal('show');
+                        $('#otpModal').modal({
+                                backdrop: 'static', 
+                                keyboard: false 
+                            }).modal('show');
+                        if (resend) {
+                            $('.success-message').text('OTP Resent Successfully').show();
+                            setTimeout(function() {
+                                $('.success-message').fadeOut();
+                            }, 3000);
+                        }
                     }
                 },
             });
         }
-
+        
+        $('.input_otp input').on('input', function() {
+            this.value = this.value.slice(0, 1);
+            var nextInput = $(this).next('input');
+            if (nextInput.length) {
+                nextInput.focus();
+            }
+        });
+        $('.input_otp input').on('keydown', function(e) {
+            if (e.key === "Backspace" && this.value === '') {
+                var prevInput = $(this).prev('input');
+                if (prevInput.length) {
+                    prevInput.focus();
+                }
+            }
+        });
 
         $('#confirmAndPay').click(function(e) {
             e.preventDefault();
@@ -1012,9 +1048,7 @@
 
         function NXCardPayment(paymentIndent) {
             var paymentModal = $('#payment-modal').modal('show');
-            var stripe = Stripe(
-                "pk_test_51PIhblEnUJaIesFNOv2aHjHXjTXUxeTfyEvjlgX0ALLzXlhfr47v1xHu396Oo0roK2QL4YOmM5uFYylTVW0aifYp002IWqhbs3"
-                );
+            var stripe = Stripe('{{ config('services.stripe.key') }}');
 
             let elements;
             stripeInitialize();

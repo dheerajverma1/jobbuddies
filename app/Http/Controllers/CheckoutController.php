@@ -68,7 +68,6 @@ class CheckoutController extends Controller
         }
     }
 
-
     public function createStripeCustomer($user)
     {
         if ($user && $user->stripe_customer_id) {
@@ -88,9 +87,7 @@ class CheckoutController extends Controller
     }
     public function handleWebhook(Request $request)
     {
-        // testing
-        // $Qendpoint_secret = 'whsec_gVRpa32OfiDusToT01jTpMUxpfF2oJL0';
-        // LIVE
+     
         $endpoint_secret = 'whsec_y20f9hF5fvizU2ZNQy9SkssDNa4R7fQo';
 
         $payload = @file_get_contents('php://input');
