@@ -57,9 +57,6 @@
 </head>
 
 <body>
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css"
-        integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" crossorigin="anonymous">
-    <meta name="google-site-verification" content="OBHSOz2bJypVuqhse4EbUNPh6u4nlzaqmKaLoOryaqs" />
     <main>
         <div class="email-container">
             <div class="email-body">
@@ -74,8 +71,6 @@
                         with you. If you'd like to learn more, follow us on social media!</p>
                     <hr>
                     <p>Sincerely,</p>
-                    {{-- <p class="sig">Melissa</p> --}}
-                    {{-- <p><em>Melissa A.</em> --}}
                     <br>Superschool</p>
                 </div>
             </div>

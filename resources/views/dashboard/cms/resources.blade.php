@@ -107,7 +107,7 @@
                                 <div class="feateure_items mt-4 mb-5">
                                     <div class="feature_items_home" id="job_list">
                                         @foreach ($jobs as $job)
-                                            <div class="feature_wrap job_list" onclick="getJobSkill({{ $job->id }})">
+                                            <div class="feature_wrap job_list" onclick="getJobSkill('{{ $job->id }}')" data-id="{{ $job->id }}">
                                                 @if ($job->job_icon)
                                                     <img class="job_image"
                                                         src="{{ asset('storage/images/' . $job->job_icon) }}">
@@ -423,6 +423,7 @@
                                     $weekDates[] = [
                                         'day' => $date->format('D'),
                                         'date' => $date->format('j M'),
+                                        'fullDate' => $date->format('Y-m-d'),
                                     ];
                                 }
                             @endphp
@@ -445,7 +446,7 @@
                         <div class="choose_availability-time">
                             @foreach ($weekDates as $weekDate)
                                 <div class="table_tr">
-                                    <div class="table_date">
+                                    <div class="table_date" data-date="{{ $weekDate['fullDate'] }}">
                                         <strong>{{ $weekDate['day'] }}</strong>{{ $weekDate['date'] }}
                                     </div>
                                     <div class="table_time">
@@ -626,7 +627,6 @@
                 }
             });
         });
-
         function getJobSkill(id) {
             var url = "{{ route('frontend.job.skill', ':id') }}";
             url = url.replace(':id', id);
@@ -783,14 +783,36 @@
             var selectedCompanyType = $('input[name=flexRadioDefault]:checked').attr('id');
             var selectedPrice = $('#' + selectedCompanyType + '-price').text();
             var userEmail = $('#email').val(); // Assuming you have an input field with id="email"
+            var startTime = $('.starttime').val();
+            var endTime = $('.endtime').val();
 
             var formData = {
                 _token: "{{ csrf_token() }}",
                 email: userEmail,
                 companyType: selectedCompanyType,
-                price: selectedPrice
+                price: selectedPrice,
+                startTime: startTime,
+                endTime: endTime
             };
+            let dateElements = document.querySelectorAll('.table_date[data-date]');
+            let dateData = [];
+            dateElements.forEach((dateElement, index) => {
+                let date = dateElement.getAttribute('data-date');
+                let startTimeInput = document.getElementById(`starttime${index}`);
+                let endTimeInput = document.getElementById(`endtime${index}`);
+                let startTime = startTimeInput ? startTimeInput.value : '';
+                let endTime = endTimeInput ? endTimeInput.value : '';
+                // Create an object with extracted data
+                let rowData = {
+                    date: date,
+                    starttime: startTime,
+                    endtime: endTime
+                };
 
+                // Push the object into the data array
+                dateData.push(rowData);
+            });
+            formData.meetingDates = dateData;
             $.ajax({
                 url: "{{ route('check-out') }}",
                 type: "POST",
@@ -926,12 +948,13 @@
             for (let i = 0; i <= addDays; i++) {
                 let current = new Date(startDate);
                 current.setDate(startDate.getDate() + i);
+                let formattedDate = `${current.getFullYear()}-${('0' + (current.getMonth() + 1)).slice(-2)}-${('0' + current.getDate()).slice(-2)}`;
                 let day = formatDay(current);
                 let fulldayname = formatFullDay(current);
                 let date = formatDate(current);
                 html += `
        <div class="table_tr">
-           <div class="table_date"><strong>${day}</strong>${date}</div>
+           <div class="table_date" data-date="${formattedDate}"><strong>${day}</strong>${date}</div>
            <div class="table_time" id="timeDiv${i}">
                <div class="time_pair">
                    <input type="time" class="starttime" name="starttime[]" id="starttime${i}" value="">

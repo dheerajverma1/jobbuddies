@@ -77,7 +77,6 @@ trait ZoomMeetingTrait
     {
         $path = 'users/me/meetings';
         $url = $this->retrieveZoomUrl();
-
         $body = [
             'headers' => $this->headers,
             'body' => json_encode([
@@ -94,7 +93,6 @@ trait ZoomMeetingTrait
                 ],
             ]),
         ];
-
         $response = $this->client->post($url . $path, $body);
 
         return [
