@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Mail\TransactionMail;
+use App\Mail\ZoomMeetingMail;
 use Illuminate\Http\Request;
 use App\Models\Cart;
 use Stripe\Stripe;
@@ -15,6 +16,7 @@ use Illuminate\Support\Facades\Validator;
 use Stripe\Webhook;
 use App\Models\OrderInvoice;
 use App\Models\User;
+use App\Traits\ZoomMeetingTrait;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -24,6 +26,7 @@ use Illuminate\Support\Str;
 
 class CheckoutController extends Controller
 {
+    use  ZoomMeetingTrait;
     public $successStatus = 200;
     public $validateStatus = 400;
     public $failedRequest = 501;
@@ -33,7 +36,7 @@ class CheckoutController extends Controller
     {
         Stripe::setApiKey(config('services.stripe.secret'));
     }
-
+    
     public function checkout(Request $request)
     {
         $user = User::where('email', $request->email)->first();
@@ -91,8 +94,8 @@ class CheckoutController extends Controller
 
     public function paymentTransaction(Request $request)
     {
+        $meetingUrl = $this->create($request);
         $intent = $request->get('payment_intent');
-
         try {
             // Set your Stripe secret key
             Stripe::setApiKey(config('services.stripe.secret'));
@@ -101,8 +104,8 @@ class CheckoutController extends Controller
             $email = $paymentIntent->receipt_email;
             $user = User::where('email', $email)->first();
             $transaction = "test";
-            Mail::to($user->email)->send(new TransactionMail($user, $transaction));
-
+            // Mail::to($user->email)->send(new TransactionMail($user, $transaction));
+            // Mail::to($user->email)->send(new ZoomMeetingMail($user, $transaction));
             // Check the payment status
             if ($paymentIntent->status === 'succeeded') {
                 return redirect()->route('success-transaction');
