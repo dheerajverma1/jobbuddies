@@ -20,17 +20,17 @@
         }
 
         /* .dropdown-content button {
-                                                       display: block;
-                                                       background-color: #212529;
-                                                       color: white;
-                                                       padding: 10px;
-                                                       text-align: center;
-                                                       border: none;
-                                                       cursor: pointer;
-                                                       } */
+                                                                       display: block;
+                                                                       background-color: #212529;
+                                                                       color: white;
+                                                                       padding: 10px;
+                                                                       text-align: center;
+                                                                       border: none;
+                                                                       cursor: pointer;
+                                                                       } */
         /* .dropdown-content button:hover {
-                                                       background-color: #3e8e41;
-                                                       } */
+                                                                       background-color: #3e8e41;
+                                                                       } */
         .dropdown:hover .dropdown-content {
             display: block;
         }
@@ -363,14 +363,14 @@
                             <input type="text" class="form-control" name="name" id="name"
                                 value="{{ Auth::check() ? Auth::user()->name : '' }}" placeholder="Enter full name"
                                 {{ Auth::check() ? 'readonly' : '' }} required>
-                            <div class="invalid-feedback" id="nameError"></div>
+                            <div class="text-danger" id="nameError"></div>
                         </div>
                         <div class="mb-3">
                             <label for="email" class="form-label">Email address</label>
                             <input type="email" class="form-control" name="email" id="email"
                                 placeholder="Enter email" value="{{ Auth::check() ? Auth::user()->email : '' }}"
                                 {{ Auth::check() ? 'readonly' : '' }} required>
-                            <div class="invalid-feedback" id="emailError"></div>
+                            <div class="text-danger" id="emailError"></div>
                         </div>
                         <div class="mb-3">
                             <label for="phone" class="form-label">Enter your phone number</label>
@@ -378,20 +378,20 @@
                                 id="phone" value="{{ Auth::check() ? Auth::user()->phone : '' }}"
                                 oninput="this.value = this.value.replace(/[^0-9.]/g, '')" placeholder="" required
                                 {{ Auth::check() ? 'readonly' : '' }}>
-                            <div class="invalid-feedback" id="phoneError"></div>
+                            <div class="text-danger" id="phoneError"></div>
                         </div>
                         @if (!Auth::check())
                             <div class="mb-3">
                                 <label for="password" class="form-label">Password</label>
                                 <input type="Password" name="password" class="form-control" id="password"
                                     placeholder="Create password" required>
-                                <div class="invalid-feedback" id="passwordError"></div>
+                                <div class="text-danger" id="passwordError"></div>
                             </div>
                             <div class="mb-3">
                                 <label for="password_confirmation" class="form-label">Confirm Password</label>
                                 <input type="Password" name="password_confirmation" class="form-control"
                                     id="password_confirmation" placeholder="Re-enter your Password" required>
-                                <div class="invalid-feedback" id="passwordConfirmationError"></div>
+                                <div class="text-danger" id="passwordConfirmationError"></div>
                             </div>
                             <button type="button" class="submit btn btn-dark d-block w-100 action-button"
                                 data-bs-toggle="modal" id="continue-details">Continue</button>
@@ -689,8 +689,11 @@
         })
         // send OTP
         $('#continue-details').click(function() {
-            sendOtp();
+            if (validateForm()) {
+                sendOtp();
+            }
         });
+
 
         // Resend OTP
         $('#resend_otp').click(function() {
@@ -1181,7 +1184,64 @@
                     document.querySelector("#button-text").classList.remove("hidden");
                 }
             }
-
         }
+
+        function validateForm() {
+            let isValid = true;
+            // Validate name
+            if ($('#name').val().trim() === '') {
+                $('#nameError').text('Name is required').show();
+                isValid = false;
+            } else {
+                $('#nameError').hide();
+            }
+            // Validate email
+            let email = $('#email').val().trim();
+            if (email === '') {
+                $('#emailError').text('Email address is required').show();
+                isValid = false;
+            } else if (!validateEmail(email)) {
+                $('#emailError').text('Invalid email address').show();
+                isValid = false;
+            } else {
+                $('#emailError').hide();
+            }
+
+            // Validate phone
+            if ($('#phone').val().trim() === '') {
+                $('#phoneError').text('Phone number is required').show();
+                isValid = false;
+            }else {
+                $('#phoneError').hide();
+            }
+
+            // Validate password and password confirmation if user is not authenticated
+            if (!{{ Auth::check() ? 'true' : 'false' }}) {
+                if ($('#password').val().trim() === '') {
+                    $('#passwordError').text('Password is required').show();
+                    isValid = false;
+                } else {
+                    $('#passwordError').hide();
+                }
+
+                if ($('#password_confirmation').val().trim() === '') {
+                    $('#passwordConfirmationError').text('Password confirmation is required').show();
+                    isValid = false;
+                } else if ($('#password').val() !== $('#password_confirmation').val()) {
+                    $('#passwordConfirmationError').text('Passwords do not match').show();
+                    isValid = false;
+                } else {
+                    $('#passwordConfirmationError').hide();
+                }
+            }
+            return isValid;
+        }
+
+        function validateEmail(email) {
+            const re =
+                /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@(([^<>()[\]\\.,;:\s@"]+\.)+[^<>()[\]\\.,;:\s@"]{2,})$/i;
+            return re.test(String(email).toLowerCase());
+        }
+
     </script>
 @endpush

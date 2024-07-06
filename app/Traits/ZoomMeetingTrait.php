@@ -3,12 +3,9 @@
 namespace App\Traits;
 
 use GuzzleHttp\Client;
-use Log;
 use Firebase\JWT\JWT;
-use Firebase\JWT\Key;
-/**
- * trait ZoomMeetingTrait
- */
+use Illuminate\Support\Facades\Log;
+
 trait ZoomMeetingTrait
 {
     public $client;
@@ -19,45 +16,42 @@ trait ZoomMeetingTrait
     {
         $this->client = new Client();
         $this->jwt = $this->generateZoomToken();
-        // Log the generated JWT token for debugging
         Log::info('Generated JWT token: Bearer ' . $this->jwt);
         $this->headers = [
-            'Authorization' => 'Bearer ' .$this->jwt,
-            'Content-Type'  => 'application/json',
-            'Accept'        => 'application/json',
+            'Authorization' => 'Bearer ' . $this->jwt,
+            'Content-Type' => 'application/json',
+            'Accept' => 'application/json',
         ];
     }
+
     public function generateZoomToken()
     {
         $key = env('ZOOM_API_KEY', '');
         $secret = env('ZOOM_API_SECRET', '');
-    
-        // Check if key and secret are provided
+
         if (empty($key) || empty($secret)) {
             Log::error('Zoom API key or secret is not set.');
-            return null; // Or throw an exception or handle the error appropriately
+            return null;
         }
-    
-        // Set expiration time to 1 hour from now
+
         $expirationTime = time() + 3600;
-    
+
         $payload = [
             'iss' => $key,
             'exp' => $expirationTime,
         ];
-    
+
         try {
             return JWT::encode($payload, $secret, 'HS256');
         } catch (\Exception $e) {
             Log::error('Error encoding JWT: ' . $e->getMessage());
-            return null; // Or throw an exception or handle the error appropriately
+            return null;
         }
     }
 
-
     private function retrieveZoomUrl()
     {
-        return env('ZOOM_API_URL', '');
+        return env('ZOOM_API_URL', 'https://api.zoom.us/v2/');
     }
 
     public function toZoomTimeFormat(string $dateTime)
@@ -87,18 +81,26 @@ trait ZoomMeetingTrait
                 'agenda' => (!empty($data['agenda'])) ? $data['agenda'] : null,
                 'timezone' => 'Asia/Kolkata',
                 'settings' => [
-                    'host_video' =>  true,
-                    'participant_video' => true,    
+                    'host_video' => true,
+                    'participant_video' => true,
                     'waiting_room' => true,
                 ],
             ]),
         ];
-        $response = $this->client->post($url . $path, $body);
 
-        return [
-            'success' => $response->getStatusCode() === 201,
-            'data' => json_decode($response->getBody(), true),
-        ];
+        try {
+            $response = $this->client->post($url . $path, $body);
+            return [
+                'success' => $response->getStatusCode() === 201,
+                'data' => json_decode($response->getBody(), true),
+            ];
+        } catch (\Exception $e) {
+            Log::error('Error creating Zoom meeting: ' . $e->getMessage());
+            return [
+                'success' => false,
+                'error' => $e->getMessage(),
+            ];
+        }
     }
 
     public function updateMeeting($id, $data)
@@ -122,51 +124,67 @@ trait ZoomMeetingTrait
                 ],
             ]),
         ];
-        $response = $this->client->patch($url . $path, $body);
 
-        return [
-            'success' => $response->getStatusCode() === 204,
-            'data' => json_decode($response->getBody(), true),
-        ];
+        try {
+            $response = $this->client->patch($url . $path, $body);
+            return [
+                'success' => $response->getStatusCode() === 204,
+                'data' => json_decode($response->getBody(), true),
+            ];
+        } catch (\Exception $e) {
+            Log::error('Error updating Zoom meeting: ' . $e->getMessage());
+            return [
+                'success' => false,
+                'error' => $e->getMessage(),
+            ];
+        }
     }
 
     public function get($id)
     {
         $path = 'meetings/' . $id;
-        return  $url = $this->retrieveZoomUrl();
+        $url = $this->retrieveZoomUrl();
 
-        $this->jwt = $this->generateZoomToken();
         $body = [
             'headers' => $this->headers,
-            'body' => json_encode([]),
         ];
 
-        $response = $this->client->get($url . $path, $body);
-
-        return [
-            'success' => $response->getStatusCode() === 204,
-            'data' => json_decode($response->getBody(), true),
-        ];
+        try {
+            $response = $this->client->get($url . $path, $body);
+            return [
+                'success' => $response->getStatusCode() === 200,
+                'data' => json_decode($response->getBody(), true),
+            ];
+        } catch (\Exception $e) {
+            Log::error('Error retrieving Zoom meeting: ' . $e->getMessage());
+            return [
+                'success' => false,
+                'error' => $e->getMessage(),
+            ];
+        }
     }
 
-    /**
-     * @param string $id
-     *
-     * @return bool[]
-     */
     public function delete($id)
     {
         $path = 'meetings/' . $id;
         $url = $this->retrieveZoomUrl();
+
         $body = [
             'headers' => $this->headers,
-            'body' => json_encode([]),
         ];
 
-        $response = $this->client->delete($url . $path, $body);
-
-        return [
-            'success' => $response->getStatusCode() === 204,
-        ];
+        try {
+            $response = $this->client->delete($url . $path, $body);
+            return [
+                'success' => $response->getStatusCode() === 204,
+            ];
+        } catch (\Exception $e) {
+            Log::error('Error deleting Zoom meeting: ' . $e->getMessage());
+            return [
+                'success' => false,
+                'error' => $e->getMessage(),
+            ];
+        }
     }
 }
+

@@ -59,7 +59,7 @@ Route::get('failed-transaction',[CheckoutController::class, 'failedTransaction']
 
 
 
-// Route::resource('meetings', 'ZoomCallController');
+Route::resource('meetings', 'ZoomCallController');
 
 /* Route for user password */
 // Route::post('/send-reset-email', [PasswordResetController::class, 'sendResetEmail']);
@@ -72,6 +72,8 @@ Route::post('/forgot-password-send', [PasswordResetController::class, 'forgotPas
 Route::get('/verify-token/{token}', [PasswordResetController::class, 'verifyToken']);
 Route::post('/new-password-store', [PasswordResetController::class, 'newPasswordStore'])->name('newPasswordStore');
 
+
+Route::get('/test',[CheckoutController::class,'testFunction']);
 
 
 
