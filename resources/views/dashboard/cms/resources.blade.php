@@ -147,6 +147,7 @@
                     </div>
                 </div>
                 <div class="row">
+                    @foreach ($interviewers as $interviewer)
                     <div class="col-sm-3">
                         <a href="#" class="expert-wrap">
                             <div class="expert_image">
@@ -154,47 +155,12 @@
                                 <p class="rating-text">4.70 <i class="bi bi-star-fill"></i></p>
                             </div>
                             <div class="expert_name">
-                                <h4 class="Name">Name</h4>
-                                <p class="sub-heading">Engineer</p>
+                                <h4 class="Name">{{$interviewer->name}}</h4>
+                                <p class="sub-heading">{{$interviewer->designation}}</p>
                             </div>
                         </a>
                     </div>
-                    <div class="col-sm-3">
-                        <a href="#" class="expert-wrap">
-                            <div class="expert_image">
-                                <img src="{{ asset('assets/frontend/images/avtar-1.jpg') }}" class="img-fluid w-100">
-                                <p class="rating-text">4.70 <i class="bi bi-star-fill"></i></p>
-                            </div>
-                            <div class="expert_name">
-                                <h4 class="Name">Name</h4>
-                                <p class="sub-heading">Engineer</p>
-                            </div>
-                        </a>
-                    </div>
-                    <div class="col-sm-3">
-                        <a href="#" class="expert-wrap">
-                            <div class="expert_image">
-                                <img src="{{ asset('assets/frontend/images/avtar-1.jpg') }}" class="img-fluid w-100">
-                                <p class="rating-text">4.70 <i class="bi bi-star-fill"></i></p>
-                            </div>
-                            <div class="expert_name">
-                                <h4 class="Name">Name</h4>
-                                <p class="sub-heading">Engineer</p>
-                            </div>
-                        </a>
-                    </div>
-                    <div class="col-sm-3">
-                        <a href="#" class="expert-wrap">
-                            <div class="expert_image">
-                                <img src="{{ asset('assets/frontend/images/avtar-1.jpg') }}" class="img-fluid w-100">
-                                <p class="rating-text">4.70 <i class="bi bi-star-fill"></i></p>
-                            </div>
-                            <div class="expert_name">
-                                <h4 class="Name">Name</h4>
-                                <p class="sub-heading">Engineer</p>
-                            </div>
-                        </a>
-                    </div>
+                    @endforeach
                 </div>
             </div>
         </section>

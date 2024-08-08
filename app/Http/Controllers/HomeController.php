@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Company;
+use App\Models\Interviewer;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -223,9 +224,10 @@ class HomeController extends Controller
     {
         $jobs = Job::take(4)->get();
         $jobCount = Job::count();
+        $interviewers = Interviewer::get();
          $companies =  Company::all();
          $groupedCompanies = $companies->groupBy('company_type');
-        return view('dashboard.cms.resources',compact('jobs','jobCount','groupedCompanies'));
+        return view('dashboard.cms.resources',compact('jobs','jobCount','groupedCompanies','interviewers'));
     }
 
     public function faq()
